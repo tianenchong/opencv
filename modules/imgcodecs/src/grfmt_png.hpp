@@ -51,51 +51,49 @@
 namespace cv
 {
 
-class PngDecoder CV_FINAL : public BaseImageDecoder
-{
-public:
+    class PngDecoder CV_FINAL : public BaseImageDecoder
+    {
+    public:
+        PngDecoder();
+        virtual ~PngDecoder();
 
-    PngDecoder();
-    virtual ~PngDecoder();
+        bool readData(Mat &img) CV_OVERRIDE;
+        bool readHeader() CV_OVERRIDE;
+        Dpi getDpi() CV_OVERRIDE;
+        void close();
 
-    bool  readData( Mat& img ) CV_OVERRIDE;
-    bool  readHeader() CV_OVERRIDE;
-    void  close();
+        ImageDecoder newDecoder() const CV_OVERRIDE;
 
-    ImageDecoder newDecoder() const CV_OVERRIDE;
+    protected:
+        static void readDataFromBuf(void *png_ptr, uchar *dst, size_t size);
 
-protected:
+        int m_bit_depth;
+        void *m_png_ptr;  // pointer to decompression structure
+        void *m_info_ptr; // pointer to image information structure
+        void *m_end_info; // pointer to one more image information structure
+        FILE *m_f;
+        int m_color_type;
+        size_t m_buf_pos;
+    };
 
-    static void readDataFromBuf(void* png_ptr, uchar* dst, size_t size);
+    class PngEncoder CV_FINAL : public BaseImageEncoder
+    {
+    public:
+        PngEncoder();
+        virtual ~PngEncoder();
 
-    int   m_bit_depth;
-    void* m_png_ptr;  // pointer to decompression structure
-    void* m_info_ptr; // pointer to image information structure
-    void* m_end_info; // pointer to one more image information structure
-    FILE* m_f;
-    int   m_color_type;
-    size_t m_buf_pos;
-};
+        bool isFormatSupported(int depth) const CV_OVERRIDE;
+        bool write(const Mat &img, const std::vector<int> &params) CV_OVERRIDE;
 
+        ImageEncoder newEncoder() const CV_OVERRIDE;
 
-class PngEncoder CV_FINAL : public BaseImageEncoder
-{
-public:
-    PngEncoder();
-    virtual ~PngEncoder();
-
-    bool  isFormatSupported( int depth ) const CV_OVERRIDE;
-    bool  write( const Mat& img, const std::vector<int>& params ) CV_OVERRIDE;
-
-    ImageEncoder newEncoder() const CV_OVERRIDE;
-
-protected:
-    static void writeDataToBuf(void* png_ptr, uchar* src, size_t size);
-    static void flushBuf(void* png_ptr);
-};
+    protected:
+        static void writeDataToBuf(void *png_ptr, uchar *src, size_t size);
+        static void flushBuf(void *png_ptr);
+    };
 
 }
 
 #endif
 
-#endif/*_GRFMT_PNG_H_*/
+#endif /*_GRFMT_PNG_H_*/

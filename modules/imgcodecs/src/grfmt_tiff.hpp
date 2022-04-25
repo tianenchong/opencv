@@ -50,102 +50,100 @@
 namespace cv
 {
 
-// native simple TIFF codec
-enum TiffCompression
-{
-    TIFF_UNCOMP = 1,
-    TIFF_HUFFMAN = 2,
-    TIFF_PACKBITS = 32773
-};
+    // native simple TIFF codec
+    enum TiffCompression
+    {
+        TIFF_UNCOMP = 1,
+        TIFF_HUFFMAN = 2,
+        TIFF_PACKBITS = 32773
+    };
 
-enum TiffByteOrder
-{
-    TIFF_ORDER_II = 0x4949,
-    TIFF_ORDER_MM = 0x4d4d
-};
+    enum TiffByteOrder
+    {
+        TIFF_ORDER_II = 0x4949,
+        TIFF_ORDER_MM = 0x4d4d
+    };
 
+    enum TiffTag
+    {
+        TIFF_TAG_WIDTH = 256,
+        TIFF_TAG_HEIGHT = 257,
+        TIFF_TAG_BITS_PER_SAMPLE = 258,
+        TIFF_TAG_COMPRESSION = 259,
+        TIFF_TAG_PHOTOMETRIC = 262,
+        TIFF_TAG_STRIP_OFFSETS = 273,
+        TIFF_TAG_STRIP_COUNTS = 279,
+        TIFF_TAG_SAMPLES_PER_PIXEL = 277,
+        TIFF_TAG_ROWS_PER_STRIP = 278,
+        TIFF_TAG_PLANAR_CONFIG = 284,
+        TIFF_TAG_COLOR_MAP = 320
+    };
 
-enum  TiffTag
-{
-    TIFF_TAG_WIDTH  = 256,
-    TIFF_TAG_HEIGHT = 257,
-    TIFF_TAG_BITS_PER_SAMPLE = 258,
-    TIFF_TAG_COMPRESSION = 259,
-    TIFF_TAG_PHOTOMETRIC = 262,
-    TIFF_TAG_STRIP_OFFSETS = 273,
-    TIFF_TAG_STRIP_COUNTS = 279,
-    TIFF_TAG_SAMPLES_PER_PIXEL = 277,
-    TIFF_TAG_ROWS_PER_STRIP = 278,
-    TIFF_TAG_PLANAR_CONFIG = 284,
-    TIFF_TAG_COLOR_MAP = 320
-};
+    enum TiffFieldType
+    {
+        TIFF_TYPE_BYTE = 1,
+        TIFF_TYPE_SHORT = 3,
+        TIFF_TYPE_LONG = 4
+    };
 
+    // libtiff based TIFF codec
+    class TiffDecoder CV_FINAL : public BaseImageDecoder
+    {
+    public:
+        TiffDecoder();
+        virtual ~TiffDecoder() CV_OVERRIDE;
 
-enum TiffFieldType
-{
-    TIFF_TYPE_BYTE = 1,
-    TIFF_TYPE_SHORT = 3,
-    TIFF_TYPE_LONG = 4
-};
+        bool readHeader() CV_OVERRIDE;
+        bool readData(Mat &img) CV_OVERRIDE;
+        Dpi getDpi() CV_OVERRIDE;
+        void close();
+        bool nextPage() CV_OVERRIDE;
 
+        size_t signatureLength() const CV_OVERRIDE;
+        bool checkSignature(const String &signature) const CV_OVERRIDE;
+        ImageDecoder newDecoder() const CV_OVERRIDE;
 
-// libtiff based TIFF codec
-class TiffDecoder CV_FINAL : public BaseImageDecoder
-{
-public:
-    TiffDecoder();
-    virtual ~TiffDecoder() CV_OVERRIDE;
+    protected:
+        cv::Ptr<void> m_tif;
+        int normalizeChannelsNumber(int channels) const;
+        bool m_hdr;
+        size_t m_buf_pos;
 
-    bool  readHeader() CV_OVERRIDE;
-    bool  readData( Mat& img ) CV_OVERRIDE;
-    void  close();
-    bool  nextPage() CV_OVERRIDE;
+    private:
+        TiffDecoder(const TiffDecoder &);            // copy disabled
+        TiffDecoder &operator=(const TiffDecoder &); // assign disabled
+    };
 
-    size_t signatureLength() const CV_OVERRIDE;
-    bool checkSignature( const String& signature ) const CV_OVERRIDE;
-    ImageDecoder newDecoder() const CV_OVERRIDE;
+    // ... and writer
+    class TiffEncoder CV_FINAL : public BaseImageEncoder
+    {
+    public:
+        TiffEncoder();
+        virtual ~TiffEncoder() CV_OVERRIDE;
 
-protected:
-    cv::Ptr<void> m_tif;
-    int normalizeChannelsNumber(int channels) const;
-    bool m_hdr;
-    size_t m_buf_pos;
+        bool isFormatSupported(int depth) const CV_OVERRIDE;
 
-private:
-    TiffDecoder(const TiffDecoder &); // copy disabled
-    TiffDecoder& operator=(const TiffDecoder &); // assign disabled
-};
+        bool write(const Mat &img, const std::vector<int> &params) CV_OVERRIDE;
 
-// ... and writer
-class TiffEncoder CV_FINAL : public BaseImageEncoder
-{
-public:
-    TiffEncoder();
-    virtual ~TiffEncoder() CV_OVERRIDE;
+        bool writemulti(const std::vector<Mat> &img_vec, const std::vector<int> &params) CV_OVERRIDE;
 
-    bool isFormatSupported( int depth ) const CV_OVERRIDE;
+        ImageEncoder newEncoder() const CV_OVERRIDE;
 
-    bool  write( const Mat& img, const std::vector<int>& params ) CV_OVERRIDE;
+    protected:
+        void writeTag(WLByteStream &strm, TiffTag tag,
+                      TiffFieldType fieldType,
+                      int count, int value);
 
-    bool writemulti(const std::vector<Mat>& img_vec, const std::vector<int>& params) CV_OVERRIDE;
+        bool writeLibTiff(const std::vector<Mat> &img_vec, const std::vector<int> &params);
+        bool write_32FC3_SGILOG(const Mat &img, void *tif);
 
-    ImageEncoder newEncoder() const CV_OVERRIDE;
-
-protected:
-    void  writeTag( WLByteStream& strm, TiffTag tag,
-                    TiffFieldType fieldType,
-                    int count, int value );
-
-    bool writeLibTiff( const std::vector<Mat>& img_vec, const std::vector<int>& params );
-    bool write_32FC3_SGILOG(const Mat& img, void* tif);
-
-private:
-    TiffEncoder(const TiffEncoder &); // copy disabled
-    TiffEncoder& operator=(const TiffEncoder &); // assign disabled
-};
+    private:
+        TiffEncoder(const TiffEncoder &);            // copy disabled
+        TiffEncoder &operator=(const TiffEncoder &); // assign disabled
+    };
 
 }
 
 #endif // HAVE_TIFF
 
-#endif/*_GRFMT_TIFF_H_*/
+#endif /*_GRFMT_TIFF_H_*/
