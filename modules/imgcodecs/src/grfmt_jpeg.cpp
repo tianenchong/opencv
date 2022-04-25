@@ -646,48 +646,48 @@ namespace cv
 
             for (size_t i = 0; i < params.size(); i += 2)
             {
-                if (params[i] == CV_IMWRITE_JPEG_QUALITY)
+                if( params[i] == IMWRITE_JPEG_QUALITY )
                 {
                     quality = params[i + 1];
                     quality = MIN(MAX(quality, 0), 100);
                 }
 
-                if (params[i] == CV_IMWRITE_JPEG_PROGRESSIVE)
+                if( params[i] == IMWRITE_JPEG_PROGRESSIVE )
                 {
-                    progressive = params[i + 1];
+                    progressive = params[i+1];
                 }
 
-                if (params[i] == CV_IMWRITE_JPEG_OPTIMIZE)
+                if( params[i] == IMWRITE_JPEG_OPTIMIZE )
                 {
-                    optimize = params[i + 1];
+                    optimize = params[i+1];
                 }
 
-                if (params[i] == CV_IMWRITE_JPEG_LUMA_QUALITY)
+                if( params[i] == IMWRITE_JPEG_LUMA_QUALITY )
                 {
-                    if (params[i + 1] >= 0)
+                    if (params[i+1] >= 0)
                     {
-                        luma_quality = MIN(MAX(params[i + 1], 0), 100);
+                            luma_quality = MIN(MAX(params[i + 1], 0), 100);
 
-                        quality = luma_quality;
+                            quality = luma_quality;
 
-                        if (chroma_quality < 0)
-                        {
-                            chroma_quality = luma_quality;
-                        }
+                            if (chroma_quality < 0)
+                            {
+                                chroma_quality = luma_quality;
+                            }
                     }
                 }
 
-                if (params[i] == CV_IMWRITE_JPEG_CHROMA_QUALITY)
+                if( params[i] == IMWRITE_JPEG_CHROMA_QUALITY )
                 {
-                    if (params[i + 1] >= 0)
+                    if (params[i+1] >= 0)
                     {
                         chroma_quality = MIN(MAX(params[i + 1], 0), 100);
                     }
                 }
 
-                if (params[i] == CV_IMWRITE_JPEG_RST_INTERVAL)
+                if( params[i] == IMWRITE_JPEG_RST_INTERVAL )
                 {
-                    rst_interval = params[i + 1];
+                    rst_interval = params[i+1];
                     rst_interval = MIN(MAX(rst_interval, 0), 65535L);
                 }
             }

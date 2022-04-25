@@ -373,6 +373,23 @@ template<typename R> struct TheTest
             EXPECT_EQ((LaneType)12, vx_setall_res2_[i]);
         }
 
+#if CV_SIMD_WIDTH == 16
+        {
+            uint64 a = CV_BIG_INT(0x7fffffffffffffff);
+            uint64 b = (uint64)CV_BIG_INT(0xcfffffffffffffff);
+            v_uint64x2 uint64_vec(a, b);
+            EXPECT_EQ(a, uint64_vec.get0());
+            EXPECT_EQ(b, v_extract_n<1>(uint64_vec));
+        }
+        {
+            int64 a = CV_BIG_INT(0x7fffffffffffffff);
+            int64 b = CV_BIG_INT(-1);
+            v_int64x2 int64_vec(a, b);
+            EXPECT_EQ(a, int64_vec.get0());
+            EXPECT_EQ(b, v_extract_n<1>(int64_vec));
+        }
+#endif
+
         return *this;
     }
 
@@ -572,6 +589,25 @@ template<typename R> struct TheTest
             SCOPED_TRACE(cv::format("i=%d", i));
             EXPECT_EQ((typename Rx2::lane_type)dataA[i] * dataB[i], resC[i]);
             EXPECT_EQ((typename Rx2::lane_type)dataA[i + n] * dataB[i + n], resD[i]);
+        }
+
+        return *this;
+    }
+
+    TheTest & test_mul_hi()
+    {
+        // typedef typename V_RegTraits<R>::w_reg Rx2;
+        Data<R> dataA, dataB(32767);
+        R a = dataA, b = dataB;
+
+        R c = v_mul_hi(a, b);
+
+        Data<R> resC = c;
+        const int n = R::nlanes / 2;
+        for (int i = 0; i < n; ++i)
+        {
+            SCOPED_TRACE(cv::format("i=%d", i));
+            EXPECT_EQ((typename R::lane_type)((dataA[i] * dataB[i]) >> 16), resC[i]);
         }
 
         return *this;
@@ -1663,6 +1699,7 @@ void test_hal_intrin_uint16()
         .test_arithm_wrap()
         .test_mul()
         .test_mul_expand()
+        .test_mul_hi()
         .test_cmp()
         .test_shift<1>()
         .test_shift<8>()
@@ -1697,6 +1734,7 @@ void test_hal_intrin_int16()
         .test_arithm_wrap()
         .test_mul()
         .test_mul_expand()
+        .test_mul_hi()
         .test_cmp()
         .test_shift<1>()
         .test_shift<8>()

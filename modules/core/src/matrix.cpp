@@ -177,31 +177,27 @@ namespace cv
         }
     };
 
-    namespace
-    {
-        MatAllocator *volatile g_matAllocator = NULL;
-    }
+static
+MatAllocator*& getDefaultAllocatorMatRef()
+{
+    static MatAllocator* g_matAllocator = Mat::getStdAllocator();
+    return g_matAllocator;
+}
 
-    MatAllocator *Mat::getDefaultAllocator()
-    {
-        if (g_matAllocator == NULL)
-        {
-            cv::AutoLock lock(cv::getInitializationMutex());
-            if (g_matAllocator == NULL)
-            {
-                g_matAllocator = getStdAllocator();
-            }
-        }
-        return g_matAllocator;
-    }
-    void Mat::setDefaultAllocator(MatAllocator *allocator)
-    {
-        g_matAllocator = allocator;
-    }
-    MatAllocator *Mat::getStdAllocator()
-    {
-        CV_SINGLETON_LAZY_INIT(MatAllocator, new StdMatAllocator())
-    }
+MatAllocator* Mat::getDefaultAllocator()
+{
+    return getDefaultAllocatorMatRef();
+}
+
+void Mat::setDefaultAllocator(MatAllocator* allocator)
+{
+    getDefaultAllocatorMatRef() = allocator;
+}
+
+MatAllocator* Mat::getStdAllocator()
+{
+    CV_SINGLETON_LAZY_INIT(MatAllocator, new StdMatAllocator())
+}
 
     //==================================================================================================
 
@@ -477,7 +473,7 @@ namespace cv
         }
         else
         {
-            CV_Assert(_step >= minstep);
+            CV_CheckGE(_step, minstep, "");
 
             if (_step % esz1 != 0)
             {
@@ -695,12 +691,14 @@ namespace cv
 
         if (data && (d == dims || (d == 1 && dims <= 2)) && _type == type())
         {
-            if (d == 2 && rows == _sizes[0] && cols == _sizes[1])
+            if ( dims == 1 && (d == 1 && _sizes[0] == size[0]) )
                 return;
-            for (i = 0; i < d; i++)
-                if (size[i] != _sizes[i])
+            if( d == 2 && rows == _sizes[0] && cols == _sizes[1] )
+                return;
+            for( i = 0; i < d; i++ )
+                if( size[i] != _sizes[i] )
                     break;
-            if (i == d && (d > 1 || size[1] == 1))
+            if( i == d && (d > 1 || size[1] == 1))_
                 return;
         }
 
@@ -832,22 +830,21 @@ namespace cv
         CV_Assert(m.dims <= 2);
 
         size_t esz = CV_ELEM_SIZE(flags);
-        data += roi.x * esz;
-        CV_Assert(0 <= roi.x && 0 <= roi.width && roi.x + roi.width <= m.cols &&
-                  0 <= roi.y && 0 <= roi.height && roi.y + roi.height <= m.rows);
-        if (u)
-            CV_XADD(&u->refcount, 1);
-        if (roi.width < m.cols || roi.height < m.rows)
+        data += roi.x*esz;
+        CV_Assert( 0 <= roi.x && 0 <= roi.width && roi.x + roi.width <= m.cols &&
+                0 <= roi.y && 0 <= roi.height && roi.y + roi.height <= m.rows );
+        if( roi.width < m.cols || roi.height < m.rows )
             flags |= SUBMATRIX_FLAG;
 
         step[0] = m.step[0];
         step[1] = esz;
         updateContinuityFlag();
 
-        if (rows <= 0 || cols <= 0)
+        addref();
+        if( rows <= 0 || cols <= 0 )
         {
-            release();
             rows = cols = 0;
+            release();
         }
     }
 
