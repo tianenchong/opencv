@@ -698,7 +698,7 @@ MatAllocator* Mat::getStdAllocator()
             for( i = 0; i < d; i++ )
                 if( size[i] != _sizes[i] )
                     break;
-            if( i == d && (d > 1 || size[1] == 1))_
+            if( i == d && (d > 1 || size[1] == 1))
                 return;
         }
 
