@@ -163,10 +163,10 @@ macro(ocv_assert)
 endmacro()
 
 macro(ocv_debug_message)
-#  if(OPENCV_CMAKE_DEBUG_MESSAGES)
+  if(OPENCV_CMAKE_DEBUG_MESSAGES)
     string(REPLACE ";" " " __msg "${ARGN}")
     message(STATUS "${__msg}")
-#  endif()
+  endif()
 endmacro()
 
 macro(ocv_check_environment_variables)
